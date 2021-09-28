@@ -4,8 +4,9 @@ FILEPATH=/var/log/syslog
 TODAY_DATE=$(date "+%b %d")
 echo "listing /var/log"
 ls -la /var/log/
-echo "$TODAY_DATE"
-
+echo "deleting files from out_logs"
+find ./out_logs -mmin +10 -type f -exec rm -f {} \;
+#exit 0
 if [[ -f "$FILEPATH" ]]
   then
 	  echo "First 10 lines of $FILEPATH ************************"
