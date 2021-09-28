@@ -1,2 +1,6 @@
 some text! 
+after hard reset
+
+fdsa
+dev
 
