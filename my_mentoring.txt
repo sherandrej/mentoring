@@ -1,0 +1,85 @@
+ http://vm-ip:8080 открывает /var/www/index.html
+
+
+включить htaccess
+sudo a2enmod rewrite
+
+.conf
+<Directory /var/www/html>
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+</Directory>
+
+
+.htaccess
+RewriteEngine On
+RewriteRule ^reverse$ /reverse.html [QSA,L]
+
+
+прокси
+https://www.digitalocean.com/community/tutorials/how-to-configure-nginx-as-a-web-server-and-reverse-proxy-for-apache-on-one-ubuntu-18-04-server-ru
+https://firstvds.ru/technology/perenapravlenie-apache-i-nginx
+
+
+переустановил nginx с нуля. Настроить прокси на апач.
+
+
+
+/etc/nginx/default.conf/proxy.conf
+server {
+    listen 80;
+    server_name debian11-hp debian11-hp.local;
+
+    location / {
+        proxy_pass http://10.104.10.138:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+
+nft
+https://wiki.nftables.org/wiki-nftables/index.php/Quick_reference-nftables_in_10_minutes
+
+
+sudo nft add chain inet filter test_chain {type filter hook input priority 0 \; policy drop \; }
+sudo nft add chain inet test_chain {type filter hook input priority 0 \; policy drop \; }
+nft list ruleset
+nft -a list ruleset
+
+nft add table inet filter
+nft delete table inet filter
+
+nft add chain ip filter input { type filter hook input priority 0 \; }
+
+nft add chain inet filter input { type filter hook input priority 0 \; policy drop \; }
+
+nft add rule inet filter input tcp dport 80 accept
+nft add rule inet filter input tcp dport 5922 accept
+nft add rule inet filter input tcp drop
+nft add rule inet filter input tcp dport * drop
+nft add rule inet filter input* drop
+
+
+nft -f /etc/nftables.conf
+flush ruleset
+table firewall {
+  chain incoming {
+    type filter hook input priority 0; policy drop;
+
+    # established/related connections
+    ct state established,related accept
+
+    # loopback interface
+    iifname lo accept
+
+    # icmp
+    icmp type echo-request accept
+
+    # open tcp ports: sshd (22), httpd (80)
+    tcp dport {ssh, http} accept
+  }
+}
